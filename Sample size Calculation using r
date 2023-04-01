@@ -1,0 +1,155 @@
+#Power analysis for CTCDM
+#RQ: Is there a difference of CTCDM between hospital settings (GH & DH) among nurses across Malaysia
+
+#Nurses from different hospitals in Malaysia will be recruited.
+#Each participant will be collected from either ED or MED department/unit
+#We start by setting up a data frame with 5 hospitals and 10 nurses per hospitals
+
+#Testing the effect of unit, hospital setting, the interaction of unit and hospital setting on y variable, with hospital and id as random effects and id nested inside hospital
+
+#website
+#https://humburg.github.io/Power-Analysis/simr_power_analysis.html
+
+#package
+library(simr)
+simrOptions(progress=FALSE)
+
+#Creating dataset out of nothing
+#1) GET DATA
+
+##CREATE COVARIATES
+
+subj <- factor(1:10)
+class_id <- letters[1:5]
+time <- 0:2
+group <- c("control", "intervention")
+
+nurse <- factor(1:10)
+hospital_id <- letters[1:5]
+setting <- 0:2
+department <- c("ED", "MED")
+
+----------------------------
+
+subj_full <- rep(subj, 15)
+class_full <- rep(rep(class_id, each=10), 3)
+time_full <- rep(time, each=50)
+group_full <- rep(rep(group, each=5), 15)
+
+
+nurse_full <- rep(nurse, 15)
+hospital_full <- rep(rep(hospital_id, each=10), 3)
+setting_full <- rep(setting, each=50)
+department_full <- rep(rep(department, each=5), 15)
+
+-----------------------------------------------------------------
+
+covars <- data.frame(id=subj_full, class=class_full, treat=group_full, time=factor(time_full))
+covars  
+
+covars <- data.frame(id=nurse_full, hospital=hospital_full, unit=department_full, setting=factor(setting_full))
+covars
+
+---------------------------------------------------------------
+  
+
+
+##specify the parameters for the model
+
+## Intercept and slopes for MED, setting1, setting2, MED:setting1, MED:setting2
+fixed <- c(5, 0, 0.1, 0.2, 1, 0.9)
+
+##Random intercepts for participants clustered by hospital 
+rand <- list(0.5, 0.1)
+
+#residual variance
+res <- 2
+
+
+
+#2) CREATE MODEL
+
+model <- makeLmer(y ~ treat*time + (1|class/id), fixef=fixed, VarCorr=rand, sigma=res, data=covars)
+model
+
+model <- makeLmer(y ~ unit*setting + (1|hospital/id), fixef = fixed, VarCorr = rand, sigma = res, data = covars)
+model
+
+
+#3) SIMULATE POWER
+sim_treat <- powerSim(model, nsim=100, test = fcompare(y~time))
+sim_treat
+
+sim_unit <- powerSim(model, nsim=100, test = fcompare(y~setting))
+sim_unit
+
+-------------------------------------------------------------------
+
+sim_time <- powerSim(model, nsim=100, test = fcompare(y~treat))
+sim_time  
+  
+sim_setting <- powerSim(model, nsim=100, test = fcompare(y~unit))
+sim_setting
+-------------------------------------------------------------
+
+#4) POWER CURVE
+##changing effect size
+  
+model_large <- model
+fixef(model_large)['treatintervention:time1'] <- 2
+  
+model_large <- model
+fixef(model_large)['unitMED:setting1'] <- 2
+    
+---------------------------------------------------
+
+sim_treat_large <- powerSim(model_large, nsim=100, test = fcompare(y~time))
+sim_treat_large
+
+sim_unit_large <- powerSim(model_large, nsim=100, test = fcompare(y~setting))
+sim_unit_large
+
+------------------------------------------------------
+
+##change number of hospitals
+  
+model_ext_class <- extend(model, along="class", n=20)
+model_ext_class  
+
+model_ext_hospital <- extend(model, along = "hospital", n=20)
+model_ext_hospital
+  
+-----------------------------------------------------------------
+sim_treat_class <- powerSim(model_ext_class, nsim=100, test = fcompare(y~time))
+sim_treat_class
+
+sim_unit_hospital <- powerSim(model_ext_hospital, nsim=100, test = fcompare(y~setting))
+sim_unit_hospital
+
+------------------------------------------------------------------------------
+
+p_curve_treat <- powerCurve(model_ext_class, test=fcompare(y~time), along="class")
+plot(p_curve_treat)  
+  
+p_curve_unit <- powerCurve(model_ext_hospital, test = fcompare(y~setting), along = "hospital")
+plot(p_curve_unit)
+
+
+print(p_curve_unit)
+
+
+
+##changing number within hospital
+model_ext_nurse <- extend(model, within="hospital+unit+setting", n=20)
+model_ext_nurse
+sim_unit_nurse <- powerSim(model_ext_nurse, nsim=100, test = fcompare(y~setting))
+sim_unit_nurse
+p_curve_unit <- powerCurve(model_ext_nurse, test = fcompare(y~setting), within = "hospital+unit+setting", breaks = c(5,10,15,20))
+
+
+
+##changing both
+model_final <- extend(model, along = "hospital", n=18)
+model_final <- extend(model_final, within = "hospital+unit+setting", n=40)
+sim_final <- powerSim(model_final, nsim=100, test = fcompare(y~setting))
+
