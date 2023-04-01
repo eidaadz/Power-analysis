@@ -1,0 +1,31 @@
+#Selection of GENERAL hospital based on 6 region
+
+##Northern
+region <- c(rep("Northern", 4))
+State <- c ("Perlis", "Kedah","Penang","Perak")
+Hospital <- c("Hospital Tuanku Fauziah", "Hospital Sultanah Bahiyah","Hospital Pulau Pinang","Hospital Raja Permaisuri Bainun")
+data.frame("region","state","hospital")
+hospital.data <- data.frame("region", "state","Hospital")
+hospital.data <- data.frame(region,State, Hospital)
+
+##Central
+region <- c(rep("Central", 3))
+State <- c ("Selangor", "WP Kuala Lumpur", "Negeri Sembilan")
+Hospital <- c("Hospital Ampuan Rahimah", "Hospital Kuala Lumpur", "Hospital Tuanku Jaafar")
+centralhospital.data <- data.frame(region, State, Hospital)
+
+##Southern
+region <- c(rep("Southern", 2))
+State <- c ("Melaka","Johor")
+Hospital <- c("Hospital Melaka","Hospital Sultanah Aminah")
+Southernhospital.data <- data.frame(region, State, Hospital)
+
+#Random sample
+##Random sample for GENERAL HOSP based on CENTRAL region
+sample(c("Hospital Ampuan Rahimah", "Hospital Kuala Lumpur", "Hospital Tuanku Jaafar")
+sample(c("Hospital Ampuan Rahimah", "Hospital Kuala Lumpur", "Hospital Tuanku Jaafar"),size = 2)
+
+##Random sample for GENERAL HOSP based on NORTHERN region
+sample(c("Hospital Tuanku Fauziah", "Hospital Sultanah Bahiyah","Hospital Pulau Pinang","Hospital Raja Permaisuri Bainun"),size = 2)
+
+       
